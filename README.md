@@ -24,9 +24,9 @@ Before you can deploy any of the other stacks, you must deploy some prerequisite
 aws cloudformation deploy \
   --capabilities CAPABILITY_IAM \
   --template-file deploy/cloudformation/network.yml \
-  --stack-name mellon-network \
+  --stack-name archives-rr-network \
   --tags ProjectName=mellon \
-  --parameter-overrides NameTag='testaccount-mellonnetwork-dev' ContactTag='me@myhost.com' OwnerTag='me'
+  --parameter-overrides NameTag='testaccount-archives-rrnetwork-dev' ContactTag='me@myhost.com' OwnerTag='me'
 ```
 
 TODO: Add example of exporting an existing network

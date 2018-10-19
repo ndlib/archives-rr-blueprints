@@ -18,6 +18,17 @@ TODO:
 ## Deploy Shared Infrastructure
 Before you can deploy any of the other stacks, you must deploy some prerequisite pieces of shared infrastructure. These are required by both the application components and the CI/CD stacks that test and deploy those application components.
 
+### Network stack
+
+```console
+aws cloudformation deploy \
+  --capabilities CAPABILITY_IAM \
+  --template-file deploy/cloudformation/network.yml \
+  --stack-name mellon-network \
+  --tags ProjectName=mellon \
+  --parameter-overrides NameTag='testaccount-mellonnetwork-dev' ContactTag='me@myhost.com' OwnerTag='me'
+```
+
 TODO: Add example of exporting an existing network
 
 ### Infrastructure stack

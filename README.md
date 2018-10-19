@@ -1,5 +1,5 @@
 # archives-rr-blueprints
-The "Infrastructure as Code" repo for all pieces in the archives-rr Grant. Will contain Cloud Formation Templates, Ansible playbooks, deploy scripts, etc for all components of the new system.
+The "Infrastructure as Code" repo for all pieces. Will contain Cloud Formation Templates, Ansible playbooks, deploy scripts, etc for all components of the new system.
 
 Note: It is highly recommended you use something like https://github.com/awslabs/git-secrets to prevent pushing AWS secrets to the repo
 
@@ -18,17 +18,6 @@ TODO:
 ## Deploy Shared Infrastructure
 Before you can deploy any of the other stacks, you must deploy some prerequisite pieces of shared infrastructure. These are required by both the application components and the CI/CD stacks that test and deploy those application components.
 
-### Network stack
-
-```console
-aws cloudformation deploy \
-  --capabilities CAPABILITY_IAM \
-  --template-file deploy/cloudformation/network.yml \
-  --stack-name archives-rr-network \
-  --tags ProjectName=archives-rr \
-  --parameter-overrides NameTag='testaccount-archives-rrnetwork-dev' ContactTag='me@myhost.com' OwnerTag='me'
-```
-
 TODO: Add example of exporting an existing network
 
 ### Infrastructure stack
@@ -44,26 +33,6 @@ aws cloudformation deploy \
 ```
 
 ## Deploy Application Components
-
-### Data Broker stack
-```console
-aws cloudformation deploy \
-  --stack-name archives-rr-data-broker-dev \
-  --template-file deploy/cloudformation/data-broker.yml \
-  --tags ProjectName=archives-rr \
-  --parameter-overrides NameTag='testaccount-archives-rrdatabroker-dev' ContactTag='me@myhost.com' OwnerTag='myid'
-```
-
-### IIIF Image Service stack
-```console
-aws cloudformation deploy \
-  --capabilities CAPABILITY_IAM \
-  --stack-name archives-rr-image-service-dev \
-  --template-file deploy/cloudformation/iiif-service.yml \
-  --tags ProjectName=archives-rr \
-  --parameter-overrides NameTag='testaccount-archives-rrimageservice-dev' ContactTag='me@myhost.com' OwnerTag='myid' \
-    ContainerCpu='1024' ContainerMemory='2048' DesiredCount=1
-```
 
 ### IIIF Image Viewer Webcomponent stack
 ```console
@@ -85,19 +54,6 @@ aws cloudformation deploy \
 
 ## Deploy CI/CD
 Before you begin see https://developer.github.com/v3/auth/#via-oauth-tokens for how to generate an OAuth token for use with these pipelines.
-
-### IIIF Image Service Pipeline
-This will deploy to test, then to production, so it expects two different image-service stacks to exist, ex: "archives-rr-image-service-test" and "archives-rr-image-service-prod". If custom stack names were used for the image-service stacks, you'll need to override the default parameters for IIIFProdServiceStackName and IIIFTestServiceStackName.
-
-```console
-aws cloudformation deploy \
-  --capabilities CAPABILITY_IAM \
-  --stack-name archives-rr-image-service-pipeline \
-  --template-file deploy/cloudformation/iiif-service-pipeline.yml \
-  --tags ProjectName=archives-rr \
-  --parameter-overrides OAuth=my_oauth_key Approvers=me@myhost.com \
-    NameTag='testaccount-archives-rrimageservicepipeline' ContactTag='me@myhost.com' OwnerTag='myid'
-```
 
 ### IIIF Image Viewer Pipeline
 This will deploy to test, then to production, so it expects two different image-viewer stacks to exist, ex: "archives-rr-image-webcomponent-test" and "archives-rr-image-webcomponent-prod".

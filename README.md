@@ -25,7 +25,7 @@ aws cloudformation deploy \
   --capabilities CAPABILITY_IAM \
   --template-file deploy/cloudformation/network.yml \
   --stack-name archives-rr-network \
-  --tags ProjectName=mellon \
+  --tags ProjectName=archives-rr \
   --parameter-overrides NameTag='testaccount-archives-rrnetwork-dev' ContactTag='me@myhost.com' OwnerTag='me'
 ```
 

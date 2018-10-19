@@ -1,0 +1,197 @@
+---
+AWSTemplateFormatVersion: '2010-09-09'
+
+
+Description: 'Static host for webcomponents and single-page applications'
+
+
+Parameters:
+
+  InfrastructureStackName:
+    Type: String
+    Default: archives-rr-app-infrastructure
+    Description: The name of the parent infrastructure/networking stack that you created. Necessary
+                 to locate and reference resources created by that stack.
+
+  AcmCertificateArn:
+    Type: String
+    Description: Arn for ACM Certificate
+    Default: ''
+
+  FQDN:
+    Type: String
+    Description: DNS name for the website to publish
+    MaxLength: 63
+    AllowedPattern: ^$|(?!-)[a-zA-Z0-9-.]{1,63}(?<!-)
+    ConstraintDescription: must be a valid DNS zone name
+    Default: ''
+
+  EnvType:
+    Type: String
+    Description: The type of environment to create.
+    Default: dev
+    AllowedValues:
+      - dev
+      - prod
+    ConstraintDescription: must specify prod or dev.
+
+  NameTag:
+    Type: String
+    Description: The value to add for the "Name" tag. This should share a value with all stacks associated with this project
+    AllowedPattern: ".+-.+-(dev|prod|prep)(-.+)*"
+    ConstraintDescription: "Name should match the pattern [infra]-{service}-[env]-{etc}. Ex: libnd-myservice-dev-myname"
+
+  OwnerTag:
+    Type: String
+    Description: The value to add for the "Owner" tag. This should be the individual that owns or created this stack.
+
+  ContactTag:
+    Type: String
+    Description: The value to add for the "Contact" tag. This should be an email or phone of someone to contact for information about this stack
+
+Mappings:
+  CacheSettings:
+    dev:
+      DefaultTTL: 0
+    prod:
+      DefaultTTL: 86400
+
+Conditions:
+
+  NoFQDN: !Equals
+    - !Ref FQDN
+    - ''
+
+  NoSSL: !Equals
+    - !Ref AcmCertificateArn
+    - ''
+
+Outputs:
+
+  BucketName:
+    Description: Name of S3 bucket to hold website content
+    Value: !Ref Bucket
+    Export:
+      Name: !Join [ ':', [ !Ref 'AWS::StackName', 'BucketName']]
+
+  URL:
+    Description: The FQDN if one is given, otherwise the cloudfront distribution domain name.
+    Value: !If
+      - NoFQDN
+      - !GetAtt Distribution.DomainName
+      - !Ref FQDN
+    Export:
+      Name: !Join [ ':', [ !Ref 'AWS::StackName', 'URL']]
+
+  DistributionDomainName:
+    Description: The cloudfront distribution domain name.
+    Value: !GetAtt Distribution.DomainName
+
+Resources:
+
+  OriginAccessIdentity:
+    Type: AWS::CloudFront::CloudFrontOriginAccessIdentity
+    Properties:
+      CloudFrontOriginAccessIdentityConfig:
+        Comment: !Sub Static assets in ${AWS::StackName}
+
+  Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      LoggingConfiguration:
+        DestinationBucketName:
+          Fn::ImportValue: !Join [':', [!Ref InfrastructureStackName, 'LogBucket']]
+        LogFilePrefix: !If
+          - NoFQDN
+          - !Sub s3/${AWS::StackName}/
+          - !Sub s3/${FQDN}/
+      Tags:
+        - Key: Name
+          Value: !Ref NameTag
+        - Key: Owner
+          Value: !Ref OwnerTag
+        - Key: Contact
+          Value: !Ref ContactTag
+
+  BucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    DependsOn: OriginAccessIdentity
+    Properties:
+      Bucket: !Ref Bucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action:
+              - s3:GetObject
+            Resource: !Sub ${Bucket.Arn}/*
+            Principal:
+              CanonicalUser: !GetAtt OriginAccessIdentity.S3CanonicalUserId
+
+  Distribution:
+    Type: AWS::CloudFront::Distribution
+    DependsOn: OriginAccessIdentity
+    Properties:
+      DistributionConfig:
+        Enabled: true
+        HttpVersion: http2
+        PriceClass: PriceClass_100
+        ViewerCertificate: !If
+          - NoSSL
+          - !Ref AWS::NoValue
+          - AcmCertificateArn: !Ref AcmCertificateArn
+            MinimumProtocolVersion: TLSv1.1_2016
+            SslSupportMethod: sni-only
+        Comment: !If
+          - NoFQDN
+          - !Ref AWS::NoValue
+          - !Ref FQDN
+        Aliases: !If
+          - NoFQDN
+          - !Ref AWS::NoValue
+          - - !Ref FQDN
+        DefaultRootObject: index.html
+        DefaultCacheBehavior:
+          ForwardedValues:
+            QueryString: false
+          AllowedMethods:
+            - HEAD
+            - GET
+            - OPTIONS
+          Compress: true
+          DefaultTTL: !FindInMap [CacheSettings, !Ref EnvType, "DefaultTTL"]
+          ViewerProtocolPolicy: !If
+            - NoSSL
+            - allow-all
+            - redirect-to-https
+          TargetOriginId: Bucket
+        Origins:
+          - Id: Bucket
+            DomainName: !GetAtt Bucket.DomainName
+            S3OriginConfig:
+              OriginAccessIdentity: !Join
+                - /
+                - - origin-access-identity
+                  - cloudfront
+                  - !Ref OriginAccessIdentity
+        Logging:
+          # This should result in "logbucketname.s3.amazonaws.com", where "logbucketname" is the value from an export
+          # named "InfrastructureStackName:LogBucket"
+          Bucket: !Join
+            - .
+            - - !ImportValue
+                Fn::Join: [':', [!Ref InfrastructureStackName, 'LogBucket']]
+              - s3
+              - !Ref AWS::URLSuffix
+          Prefix: !If
+            - NoFQDN
+            - !Sub web/${AWS::StackName}/
+            - !Sub web/${FQDN}/
+          IncludeCookies: true
+      Tags:
+        - Key: Name
+          Value: !Ref NameTag
+        - Key: Owner
+          Value: !Ref OwnerTag
+        - Key: Contact
+          Value: !Ref ContactTag

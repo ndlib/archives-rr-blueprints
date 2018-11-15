@@ -20,7 +20,7 @@ aws cloudformation deploy \
   --tags ProjectName=archives-rr \
   --parameter-overrides NameTag='testaccount-archives-rrappinfrastructure-dev' ContactTag='me@myhost.com' OwnerTag='me'
 ```
-## Website test stack
+## Website test stack - FQDN Unknown
 ```console
 aws cloudformation deploy \
   --stack-name archives-rr-website-test \
@@ -28,8 +28,15 @@ aws cloudformation deploy \
   --tags ProjectName=archives-rr \
   --parameter-overrides NameTag='testaccount-archives-rrwebsite-prep' ContactTag='me@myhost.com' OwnerTag='myid'
 ```
-
-## Website prod stack
+## Website test stack with a Known DNS Entry
+```console
+aws cloudformation deploy \
+  --stack-name archives-rr-website-test \
+  --template-file deploy/cloudformation/static-host.yml \
+  --tags ProjectName=archives-rr \
+  --parameter-overrides NameTag='testaccount-archives-rrwebsite-prep' ContactTag='me@myhost.com' OwnerTag='myid' FQDN='fqdn-of-test-service'
+```  
+## Website prod stack - FQDN Unknown
 ```console
 aws cloudformation deploy \
   --stack-name archives-rr-website-prod \
@@ -37,7 +44,14 @@ aws cloudformation deploy \
   --tags ProjectName=archives-rr \
   --parameter-overrides NameTag='testaccount-archives-rrwebsite-prod' ContactTag='me@myhost.com' OwnerTag='myid'
 ```
-
+## Website prod stack with a Known DNS Entry
+```console
+aws cloudformation deploy \
+  --stack-name archives-rr-website-prod \
+  --template-file deploy/cloudformation/static-host.yml \
+  --tags ProjectName=archives-rr \
+  --parameter-overrides NameTag='testaccount-archives-rrwebsite-prod' ContactTag='me@myhost.com' OwnerTag='myid' FQDN='fqdn-of-prod-service'
+```
 ## Website Pipeline
 Before you begin see https://developer.github.com/v3/auth/#via-oauth-tokens for how to generate an OAuth token for use with these pipelines. This will deploy to test, then to production, so it expects two different website stacks to exist, ex: "archives-rr-website-test" and "archives-rr-website-prod".
 

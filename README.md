@@ -17,21 +17,21 @@ aws cloudformation deploy \
   --capabilities CAPABILITY_IAM \
   --template-file deploy/cloudformation/app-infrastructure.yml \
   --stack-name archives-rr-app-infrastructure \
-  --tags ProjectName=archives-rr Name='accountname-archives-rr-appinfrastructure-env' Contact='me@myhost.com' Owner='myid'
+  --tags ProjectName=archives-rr Name='accountname-archives-rr-appinfrastructure-env' Contact='me@myhost.com' Owner='myid' Description='brief-description-of-purpose'
 ```
 ## Website test stack - FQDN Unknown
 ```console
 aws cloudformation deploy \
   --stack-name archives-rr-website-test \
   --template-file deploy/cloudformation/static-host.yml \
-  --tags ProjectName=archives-rr Name='accountname-archives-rr-website-prep' Contact='me@myhost.com' Owner='myid'
+  --tags ProjectName=archives-rr Name='accountname-archives-rr-website-prep' Contact='me@myhost.com' Owner='myid' Description='brief-description-of-purpose'
 ```
 ## Website test stack with a Known DNS Entry
 ```console
 aws cloudformation deploy \
   --stack-name archives-rr-website-test \
   --template-file deploy/cloudformation/static-host.yml \
-  --tags ProjectName=archives-rr Name='accountname-archives-rr-website-prep' Contact='me@myhost.com' Owner='myid' \
+  --tags ProjectName=archives-rr Name='accountname-archives-rr-website-prep' Contact='me@myhost.com' Owner='myid' Description='brief-description-of-purpose' \
   --parameter-overrides FQDN='fqdn-of-test-service'
 ```  
 ## Website prod stack - FQDN Unknown
@@ -39,14 +39,14 @@ aws cloudformation deploy \
 aws cloudformation deploy \
   --stack-name archives-rr-website-prod \
   --template-file deploy/cloudformation/static-host.yml \
-  --tags ProjectName=archives-rr Name='accountname-archives-rr-website-prod' Contact='me@myhost.com' Owner='myid'
+  --tags ProjectName=archives-rr Name='accountname-archives-rr-website-prod' Contact='me@myhost.com' Owner='myid' Description='brief-description-of-purpose'
 ```
 ## Website prod stack with a Known DNS Entry
 ```console
 aws cloudformation deploy \
   --stack-name archives-rr-website-prod \
   --template-file deploy/cloudformation/static-host.yml \
-  --tags ProjectName=archives-rr Name='accountname-archives-rr-website-prod' Contact='me@myhost.com' Owner='myid' \
+  --tags ProjectName=archives-rr Name='accountname-archives-rr-website-prod' Contact='me@myhost.com' Owner='myid' Description='brief-description-of-purpose' \
   --parameter-overrides FQDN='fqdn-of-prod-service'
 ```
 ## Website Pipeline
@@ -57,7 +57,7 @@ aws cloudformation deploy \
   --capabilities CAPABILITY_IAM \
   --stack-name archives-rr-website-pipeline \
   --template-file deploy/cloudformation/static-host-pipeline.yml \
-  --tags ProjectName=archives-rr Name='accountname-archives-rr-websitepipeline-prod' Contact='me@myhost.com' Owner='myid' \
+  --tags ProjectName=archives-rr Name='accountname-archives-rr-websitepipeline-prod' Contact='me@myhost.com' Owner='myid' Description='brief-description-of-purpose' \
   --parameter-overrides OAuth=my_oauth_key Approvers=me@myhost.com \
     SourceRepoOwner=ndlib SourceRepoName=archives-rr \
     TestStackName=archives-rr-website-test ProdStackName=archives-rr-website-prod
@@ -70,6 +70,6 @@ Use this stack if you want to notify an email address of pipeline events. It is 
 aws cloudformation deploy \
   --stack-name archives-rr-website-pipeline-monitoring \
   --template-file deploy/cloudformation/pipeline-monitoring.yml \
-  --tags ProjectName=archives-rr Name='accountname-archives-rr-websitepipeline-prod' Contact='me@myhost.com' Owner='myid' \
+  --tags ProjectName=archives-rr Name='accountname-archives-rr-websitepipeline-prod' Contact='me@myhost.com' Owner='myid' Description='brief-description-of-purpose'\
   --parameter-overrides PipelineStackName=archives-rr-website-pipeline Receivers=me@myhost.com
 ```

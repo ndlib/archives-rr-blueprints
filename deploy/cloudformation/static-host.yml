@@ -91,13 +91,6 @@ Resources:
           - NoFQDN
           - !Sub s3/${AWS::StackName}/
           - !Sub s3/${FQDN}/
-      Tags:
-        - Key: Name
-          Value: !Ref NameTag
-        - Key: Owner
-          Value: !Ref OwnerTag
-        - Key: Contact
-          Value: !Ref ContactTag
 
   BucketPolicy:
     Type: AWS::S3::BucketPolicy
@@ -174,10 +167,3 @@ Resources:
             - !Sub web/${AWS::StackName}/
             - !Sub web/${FQDN}/
           IncludeCookies: true
-      Tags:
-        - Key: Name
-          Value: !Ref NameTag
-        - Key: Owner
-          Value: !Ref OwnerTag
-        - Key: Contact
-          Value: !Ref ContactTag

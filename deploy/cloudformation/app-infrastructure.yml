@@ -18,13 +18,6 @@ Resources:
         - Status: Enabled
           ExpirationInDays: 3653
           NoncurrentVersionExpirationInDays: 1
-      Tags:
-        - Key: Name
-          Value: !Ref NameTag
-        - Key: Owner
-          Value: !Ref OwnerTag
-        - Key: Contact
-          Value: !Ref ContactTag
 
 Outputs:
 

@@ -17,40 +17,37 @@ aws cloudformation deploy \
   --capabilities CAPABILITY_IAM \
   --template-file deploy/cloudformation/app-infrastructure.yml \
   --stack-name archives-rr-app-infrastructure \
-  --tags ProjectName=archives-rr \
-  --parameter-overrides NameTag='testaccount-archives-rrappinfrastructure-dev' ContactTag='me@myhost.com' OwnerTag='me'
+  --tags ProjectName=archives-rr Name='accountname-archives-rr-appinfrastructure-env' Contact='me@myhost.com' Owner='myid' Description='brief-description-of-purpose'
 ```
 ## Website test stack - FQDN Unknown
 ```console
 aws cloudformation deploy \
   --stack-name archives-rr-website-test \
   --template-file deploy/cloudformation/static-host.yml \
-  --tags ProjectName=archives-rr \
-  --parameter-overrides NameTag='testaccount-archives-rrwebsite-prep' ContactTag='me@myhost.com' OwnerTag='myid'
+  --tags ProjectName=archives-rr Name='accountname-archives-rr-website-prep' Contact='me@myhost.com' Owner='myid' Description='brief-description-of-purpose'
 ```
 ## Website test stack with a Known DNS Entry
 ```console
 aws cloudformation deploy \
   --stack-name archives-rr-website-test \
   --template-file deploy/cloudformation/static-host.yml \
-  --tags ProjectName=archives-rr \
-  --parameter-overrides NameTag='testaccount-archives-rrwebsite-prep' ContactTag='me@myhost.com' OwnerTag='myid' FQDN='fqdn-of-test-service'
+  --tags ProjectName=archives-rr Name='accountname-archives-rr-website-prep' Contact='me@myhost.com' Owner='myid' Description='brief-description-of-purpose' \
+  --parameter-overrides FQDN='fqdn-of-test-service'
 ```  
 ## Website prod stack - FQDN Unknown
 ```console
 aws cloudformation deploy \
   --stack-name archives-rr-website-prod \
   --template-file deploy/cloudformation/static-host.yml \
-  --tags ProjectName=archives-rr \
-  --parameter-overrides NameTag='testaccount-archives-rrwebsite-prod' ContactTag='me@myhost.com' OwnerTag='myid'
+  --tags ProjectName=archives-rr Name='accountname-archives-rr-website-prod' Contact='me@myhost.com' Owner='myid' Description='brief-description-of-purpose'
 ```
 ## Website prod stack with a Known DNS Entry
 ```console
 aws cloudformation deploy \
   --stack-name archives-rr-website-prod \
   --template-file deploy/cloudformation/static-host.yml \
-  --tags ProjectName=archives-rr \
-  --parameter-overrides NameTag='testaccount-archives-rrwebsite-prod' ContactTag='me@myhost.com' OwnerTag='myid' FQDN='fqdn-of-prod-service'
+  --tags ProjectName=archives-rr Name='accountname-archives-rr-website-prod' Contact='me@myhost.com' Owner='myid' Description='brief-description-of-purpose' \
+  --parameter-overrides FQDN='fqdn-of-prod-service'
 ```
 ## Website Pipeline
 Before you begin see https://developer.github.com/v3/auth/#via-oauth-tokens for how to generate an OAuth token for use with these pipelines. This will deploy to test, then to production, so it expects two different website stacks to exist, ex: "archives-rr-website-test" and "archives-rr-website-prod".
@@ -60,11 +57,10 @@ aws cloudformation deploy \
   --capabilities CAPABILITY_IAM \
   --stack-name archives-rr-website-pipeline \
   --template-file deploy/cloudformation/static-host-pipeline.yml \
-  --tags ProjectName=archives-rr \
+  --tags ProjectName=archives-rr Name='accountname-archives-rr-websitepipeline-prod' Contact='me@myhost.com' Owner='myid' Description='brief-description-of-purpose' \
   --parameter-overrides OAuth=my_oauth_key Approvers=me@myhost.com \
     SourceRepoOwner=ndlib SourceRepoName=archives-rr \
-    TestStackName=archives-rr-website-test ProdStackName=archives-rr-website-prod \
-    NameTag='testaccount-archives-rrwebsitepipeline-prod' ContactTag='me@myhost.com' OwnerTag='myid'
+    TestStackName=archives-rr-website-test ProdStackName=archives-rr-website-prod
 ```
 
 ## Pipeline Monitoring
@@ -74,6 +70,6 @@ Use this stack if you want to notify an email address of pipeline events. It is 
 aws cloudformation deploy \
   --stack-name archives-rr-website-pipeline-monitoring \
   --template-file deploy/cloudformation/pipeline-monitoring.yml \
-  --tags ProjectName=archives-rr \
+  --tags ProjectName=archives-rr Name='accountname-archives-rr-websitepipeline-prod' Contact='me@myhost.com' Owner='myid' Description='brief-description-of-purpose'\
   --parameter-overrides PipelineStackName=archives-rr-website-pipeline Receivers=me@myhost.com
 ```

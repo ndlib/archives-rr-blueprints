@@ -60,8 +60,7 @@ aws cloudformation deploy \
   --tags ProjectName=archives-rr Name='accountname-archives-rr-websitepipeline-prod' Contact='me@myhost.com' Owner='myid' Description='brief-description-of-purpose' \
   --parameter-overrides OAuth=my_oauth_key Approvers=me@myhost.com \
     SourceRepoOwner=ndlib SourceRepoName=archives-rr \
-    TestStackName=archives-rr-website-test ProdStackName=archives-rr-website-prod \
-    NameTag='accountname-archives-rr-websitepipeline-prod'
+    TestStackName=archives-rr-website-test ProdStackName=archives-rr-website-prod
 ```
 
 ## Pipeline Monitoring

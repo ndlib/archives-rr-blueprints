@@ -51,12 +51,6 @@ Parameters:
     Type: String
     Description: The name of the CloudFormation stack that created the test static host
 
-  NameTag:
-    Type: String
-    Description: The value to add for the "Name" tag. This should share a value with all stacks associated with this project
-    AllowedPattern: ".+-.+(-.+)*"
-    ConstraintDescription: "Name should match the pattern [infra]-{service}{-etc}. Ex: archives-rr-image-webcomponent-pipeline"
-
 Outputs:
 
   PipelineName:
@@ -165,8 +159,6 @@ Resources:
             Value: !Ref AWS::Region
           - Name: AWS_ACCOUNT_ID
             Value: !Ref AWS::AccountId
-          - Name: PIPELINE_NAME
-            Value: !Ref NameTag
 
   CodeTestDeployRole:
     Type: AWS::IAM::Role

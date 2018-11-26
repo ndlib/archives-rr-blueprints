@@ -259,7 +259,7 @@ Resources:
                   - ":"
                   -
                     Ref: "AWS::AccountId"
-                  - ":*"
+                  - ":parameter/esu/github/*"
         -
           PolicyName: "AllowCloudWatchLogsForCodeBuild"
           PolicyDocument:

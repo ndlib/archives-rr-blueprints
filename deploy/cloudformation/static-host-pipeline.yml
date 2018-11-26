@@ -148,10 +148,6 @@ Resources:
             base-directory: ${BuildOutputDir}
             files:
               - '**/*'
-          # secondary-artifacts:
-          #   artifact1:
-          #     files:
-          #       - sha.txt
 
       Artifacts:
         Type: CODEPIPELINE

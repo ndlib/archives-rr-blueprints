@@ -94,7 +94,6 @@ Resources:
 
   BucketPolicy:
     Type: AWS::S3::BucketPolicy
-    DependsOn: OriginAccessIdentity
     Properties:
       Bucket: !Ref Bucket
       PolicyDocument:
@@ -109,7 +108,6 @@ Resources:
 
   Distribution:
     Type: AWS::CloudFront::Distribution
-    DependsOn: OriginAccessIdentity
     Properties:
       DistributionConfig:
         Enabled: true
@@ -144,6 +142,10 @@ Resources:
             - allow-all
             - redirect-to-https
           TargetOriginId: Bucket
+          LambdaFunctionAssociations:
+              -
+                EventType: origin-request
+                LambdaFunctionARN: !Sub ${DefaultDirectoryIndexLambda.Arn}:${DefaultDirectoryIndexLambdaV1.Version}
         Origins:
           - Id: Bucket
             DomainName: !GetAtt Bucket.DomainName
@@ -167,3 +169,63 @@ Resources:
             - !Sub web/${AWS::StackName}/
             - !Sub web/${FQDN}/
           IncludeCookies: true
+
+  LambdaEdgeBasicExecutionRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          -
+            Effect: "Allow"
+            Principal:
+              Service:
+                - "lambda.amazonaws.com"
+                - "edgelambda.amazonaws.com"
+            Action:
+              - "sts:AssumeRole"
+      Path: "/"
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+
+  SPARedirectionLambda:
+    Type: "AWS::Lambda::Function"
+    Properties:
+      Code:
+        # This Lambda will take incoming web requests and adjust the request URI as appropriate.
+        # Any requests for assets under the "/static" path will be passed along as originally sent.
+        # Requests that start with "faviocn.ico" and "manifest.json" will also be passed
+        # To "/favicon.ico" and "manifest.json" as appropriate. If the request does not match any
+        # of these, the request will ne routed to "/index.html" for entry into the SPA
+        ZipFile: >
+          'use strict';
+          exports.handler = (event, context, callback) => {
+              var request = event.Records[0].cf.request;
+              var olduri = request.uri;
+              var rootpath = olduri.slice(0,7);
+              var fav = olduri.slice(0,12);
+              var manifest = olduri.slice(0,14);
+              if (rootpath == ("/static") ) {
+                request.uri = request.uri;
+                return callback(null, request);
+              } else if (fav == ("/favicon.ico") ) {
+                  request.uri = "/favicon.ico";
+                  return callback(null, request);
+              }  else if (manifest == ("/manifest.json") ) {
+                  request.uri = "/manifest.json";
+                  return callback(null, request);
+              }  else {
+                  request.uri = "/index.html";
+                  return callback(null, request);
+              }
+          };
+      Description: Basic rewrite rule to send directory requests to appropriate locations in the SPA
+      Handler: index.handler
+      Role: !GetAtt LambdaEdgeBasicExecutionRole.Arn
+      Runtime: nodejs8.10
+
+  DefaultDirectoryIndexLambdaV1:
+    Type: AWS::Lambda::Version
+    Properties:
+      FunctionName: !Ref DefaultDirectoryIndexLambda
+      Description: Adds the rewrite rules as needed

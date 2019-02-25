@@ -145,7 +145,7 @@ Resources:
           LambdaFunctionAssociations:
               -
                 EventType: origin-request
-                LambdaFunctionARN: !Sub ${DefaultDirectoryIndexLambda.Arn}:${DefaultDirectoryIndexLambdaV1.Version}
+                LambdaFunctionARN: !Sub ${SPARedirectionLambda.Arn}:${DefaultDirectoryIndexLambdaV1.Version}
         Origins:
           - Id: Bucket
             DomainName: !GetAtt Bucket.DomainName
@@ -227,5 +227,5 @@ Resources:
   DefaultDirectoryIndexLambdaV1:
     Type: AWS::Lambda::Version
     Properties:
-      FunctionName: !Ref DefaultDirectoryIndexLambda
+      FunctionName: !Ref SPARedirectionLambda
       Description: Adds the rewrite rules as needed

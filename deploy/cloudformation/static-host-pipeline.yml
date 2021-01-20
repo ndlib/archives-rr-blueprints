@@ -50,6 +50,10 @@ Parameters:
   TestStackName:
     Type: String
     Description: The name of the CloudFormation stack that created the test static host
+  
+  SecretsPath:
+    Type: String
+    Description: The path in Secrets Manager where configuration lives
 
 Outputs:
 
@@ -111,12 +115,21 @@ Resources:
                       -
                         - !GetAtt CodeS3Bucket.Arn
                         - "/*"
+              -
+                Effect: Allow
+                Action:
+                  - secretsmanager:DescribeSecret
+                  - secretsmanager:ListSecretVersionIds
+                  - secretsmanager:GetSecretValue
+                Resource:
+                  - !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:${SecretsPath}/test*"
+                  - !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:${SecretsPath}/prod*"
 
 
-  CodeBuilder:
+  CodeBuilderTest:
     Type: 'AWS::CodeBuild::Project'
     Properties:
-      Name: !Sub '${AWS::StackName}-CodeBuilder'
+      Name: !Sub '${AWS::StackName}-test-CodeBuilder'
       Description: 'Builds source web component from GitHub'
       ServiceRole: !Ref CodeBuildRole
       TimeoutInMinutes: 10
@@ -162,6 +175,60 @@ Resources:
             Value: !Ref AWS::Region
           - Name: AWS_ACCOUNT_ID
             Value: !Ref AWS::AccountId
+          - Name: STAGE
+            Value: test
+
+  CodeBuilderProd:
+    Type: 'AWS::CodeBuild::Project'
+    Properties:
+      Name: !Sub '${AWS::StackName}-prod-CodeBuilder'
+      Description: 'Builds source web component from GitHub'
+      ServiceRole: !Ref CodeBuildRole
+      TimeoutInMinutes: 10
+      Source:
+        Type: CODEPIPELINE
+        BuildSpec: !Sub |
+          version: 0.2
+
+          phases:
+            install:
+              runtime-versions:
+                nodejs: 12.x
+              commands:
+                - echo Install started on `date`
+                - chmod -R 755 ${BuildScriptsDir}/*
+                - ${BuildScriptsDir}/install.sh
+            pre_build:
+              commands:
+                - echo Pre-build started on `date`
+                - ${BuildScriptsDir}/pre_build.sh
+            build:
+              commands:
+                - echo Build started on `date`
+                - ${BuildScriptsDir}/build.sh
+            post_build:
+              commands:
+                - echo Beginning post build on `date`
+                - ${BuildScriptsDir}/post_build.sh
+                - printf $CODEBUILD_RESOLVED_SOURCE_VERSION > ${BuildOutputDir}/sha.txt
+          artifacts:
+            base-directory: ${BuildOutputDir}
+            files:
+              - '**/*'
+
+      Artifacts:
+        Type: CODEPIPELINE
+      Environment:
+        Type: LINUX_CONTAINER
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: aws/codebuild/standard:4.0
+        EnvironmentVariables:
+          - Name: AWS_DEFAULT_REGION
+            Value: !Ref AWS::Region
+          - Name: AWS_ACCOUNT_ID
+            Value: !Ref AWS::AccountId
+          - Name: STAGE
+            Value: prod
 
   CodeTestDeployRole:
     Type: AWS::IAM::Role
@@ -440,7 +507,8 @@ Resources:
               - codebuild:StartBuild
               - codebuild:BatchGetBuilds
             Resource:
-              - !GetAtt CodeBuilder.Arn
+              - !GetAtt CodeBuilderTest.Arn
+              - !GetAtt CodeBuilderProd.Arn
               - !GetAtt CodeTestDeployer.Arn
               - !GetAtt CodeProdDeployer.Arn
           - Effect: Allow
@@ -482,18 +550,33 @@ Resources:
           Name: Build
           Actions:
             -
-              Name: "Build"
+              Name: "BuildTest"
               InputArtifacts:
                 - Name: SourceCode
               OutputArtifacts:
-                - Name: BuiltCode
+                - Name: BuiltTestCode
               ActionTypeId:
                 Owner: AWS
                 Category: Build
                 Provider: CodeBuild
                 Version: "1"
               Configuration:
-                ProjectName: !Ref CodeBuilder
+                ProjectName: !Ref CodeBuilderTest
+              RunOrder: 1
+            -
+              Name: "BuildProd"
+              InputArtifacts:
+                - Name: SourceCode
+              OutputArtifacts:
+                - Name: BuiltProdCode
+              ActionTypeId:
+                Owner: AWS
+                Category: Build
+                Provider: CodeBuild
+                Version: "1"
+              Configuration:
+                ProjectName: !Ref CodeBuilderProd
+              RunOrder: 1
         -
           Name: DeployToTest
           Actions:
@@ -504,7 +587,7 @@ Resources:
                 Version: '1'
                 Provider: CodeBuild
               InputArtifacts:
-              - Name: BuiltCode
+              - Name: BuiltTestCode
               OutputArtifacts:
               - Name: TestDeployOutput
               Configuration:
@@ -540,7 +623,7 @@ Resources:
                 Version: '1'
                 Provider: CodeBuild
               InputArtifacts:
-              - Name: BuiltCode
+              - Name: BuiltProdCode
               OutputArtifacts:
               - Name: ProdDeployOutput
               Configuration:

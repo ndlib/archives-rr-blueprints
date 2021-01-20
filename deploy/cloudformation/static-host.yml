@@ -222,7 +222,7 @@ Resources:
       Description: Basic rewrite rule to send directory requests to appropriate locations in the SPA
       Handler: index.handler
       Role: !GetAtt LambdaEdgeBasicExecutionRole.Arn
-      Runtime: nodejs10.x
+      Runtime: nodejs12.x
 
   DefaultDirectoryIndexLambdaV1:
     Type: AWS::Lambda::Version
